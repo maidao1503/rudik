@@ -116,7 +116,15 @@ public class GenerateRules {
 		System.out.printf("Instantiating RuDik API with config: %s ...\n", rudik_config);
 
 		RudikApi API = new RudikApi(rudik_config, 5 * 60, true, 500);
-
+		XMLConfiguration config_dbpedia = null;
+    try {
+    	config_dbpedia = new XMLConfiguration(rudik_config);
+    } catch (ConfigurationException e) {
+        System.err.println(String.format("No configuration file could be found at the path: %s", rudik_config));
+        e.printStackTrace();
+    }
+    String sparql_endpoint = config_dbpedia.getString("naive.sparql.parameters.sparql_endpoint");
+    String graph_iri = config_dbpedia.getString("naive.sparql.graph_iri");
 		XMLConfiguration param_config = null;
 		List<Map<String, Double>> score_params = new ArrayList<>();
 		
@@ -210,6 +218,10 @@ public class GenerateRules {
 								Document rule = new Document("predicate", oneResult.getTargetPredicate());
 								System.out.println(
 										String.format("Generated for predicate: %s", oneResult.getTargetPredicate()));
+								
+								rule.append("knowledge_base", "DBpedia");
+								rule.append("sparql_endpoint", sparql_endpoint);
+								rule.append("graph_iri", graph_iri);
 								// get type of the rule = positive
 
 								// manually decode RuleType
