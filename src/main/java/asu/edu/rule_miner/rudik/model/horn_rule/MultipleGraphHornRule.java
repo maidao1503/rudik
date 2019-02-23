@@ -303,54 +303,55 @@ public class MultipleGraphHornRule<T> extends HornRule {
         notCoveredExamples.addAll(currentNode2examples.get(oneNode));
         final Set<Edge<T>> neighbours = g.getNeighbours(oneNode);
 
-        // need to keep track of available meory to avoid out of memory issue
-        totEdgesCount += neighbours.size() * currentNode2examples.get(oneNode).size();
+        if(neighbours != null) {
+        	// need to keep track of available meory to avoid out of memory issue
+            totEdgesCount += neighbours.size() * currentNode2examples.get(oneNode).size();
 
-        if ((totEdgesCount > maxEdgesCount) && (rules.size() >= 2)) {
-          return false;
-        }
-
-        for (final Edge<T> oneNeighbour : neighbours) {
-
-          if (!oneNeighbour.getLabel().equals(relation) || (oneNeighbour.isArtificial() != isInverse)) {
-            continue;
-          }
-
-          final T endNode = oneNeighbour.getNodeBottom();
-          // for the current node get the not covered examples
-          for (final Pair<T, T> oneExample : currentNode2examples.get(oneNode)) {
-            final String currentNodeVariable = node2example2variable.get(endNode) != null
-                ? node2example2variable.get(endNode).get(oneExample)
-                : null;
-            // check if the variable is the same
-            boolean isGoodNode = false;
-            if (seenVariables.contains(newVariable)
-                && ((currentNodeVariable != null) && currentNodeVariable.equals(newVariable))) {
-              isGoodNode = true;
+            if ((totEdgesCount > maxEdgesCount) && (rules.size() >= 2)) {
+              return false;
             }
-            if (!seenVariables.contains(newVariable) && (currentNodeVariable == null)) {
-              Map<Pair<T, T>, String> example2variable = node2example2variable.get(endNode);
-              if (example2variable == null) {
-                example2variable = Maps.newHashMap();
-                node2example2variable.put(endNode, example2variable);
+
+            for (final Edge<T> oneNeighbour : neighbours) {
+
+              if (!oneNeighbour.getLabel().equals(relation) || (oneNeighbour.isArtificial() != isInverse)) {
+                continue;
               }
-              example2variable.put(oneExample, newVariable);
-              isGoodNode = true;
-            }
 
-            if (isGoodNode) {
-              notCoveredExamples.remove(oneExample);
-              Set<Pair<T, T>> newCurrentNodeCoveredExamples = newCurrentNodes.get(endNode);
-              if (newCurrentNodeCoveredExamples == null) {
-                newCurrentNodeCoveredExamples = Sets.newHashSet();
-                newCurrentNodes.put(endNode, newCurrentNodeCoveredExamples);
+              final T endNode = oneNeighbour.getNodeBottom();
+              // for the current node get the not covered examples
+              for (final Pair<T, T> oneExample : currentNode2examples.get(oneNode)) {
+                final String currentNodeVariable = node2example2variable.get(endNode) != null
+                    ? node2example2variable.get(endNode).get(oneExample)
+                    : null;
+                // check if the variable is the same
+                boolean isGoodNode = false;
+                if (seenVariables.contains(newVariable)
+                    && ((currentNodeVariable != null) && currentNodeVariable.equals(newVariable))) {
+                  isGoodNode = true;
+                }
+                if (!seenVariables.contains(newVariable) && (currentNodeVariable == null)) {
+                  Map<Pair<T, T>, String> example2variable = node2example2variable.get(endNode);
+                  if (example2variable == null) {
+                    example2variable = Maps.newHashMap();
+                    node2example2variable.put(endNode, example2variable);
+                  }
+                  example2variable.put(oneExample, newVariable);
+                  isGoodNode = true;
+                }
+
+                if (isGoodNode) {
+                  notCoveredExamples.remove(oneExample);
+                  Set<Pair<T, T>> newCurrentNodeCoveredExamples = newCurrentNodes.get(endNode);
+                  if (newCurrentNodeCoveredExamples == null) {
+                    newCurrentNodeCoveredExamples = Sets.newHashSet();
+                    newCurrentNodes.put(endNode, newCurrentNodeCoveredExamples);
+                  }
+                  newCurrentNodeCoveredExamples.add(oneExample);
+                }
               }
-              newCurrentNodeCoveredExamples.add(oneExample);
+
             }
-          }
-
         }
-
         // remove the not covered examples
         if (node2example2variable.containsKey(oneNode)) {
           node2example2variable.get(oneNode).keySet().removeAll(notCoveredExamples);
